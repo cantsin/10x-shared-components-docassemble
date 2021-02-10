@@ -4,13 +4,17 @@ services:
     image: postgres:10.1-alpine
     volumes:
       - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=docassemble
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=10x
   app:
     image: jhpyle/docassemble
     volumes:
       - ./backup:/usr/share/docassemble/backup
     ports:
       # http
-      - 80:80
+      - 8000:80
       - 443:443
       # log
       - 514:514
@@ -30,7 +34,7 @@ services:
       - DBBACKUP=false
       - DBHOST=db
       - DBNAME=docassemble
-      - DBUSER=docassemble
+      - DBUSER=postgres
       - DBPASSWORD=10x
       - TIMEZONE=America/New_York
 volumes:
