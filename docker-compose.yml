@@ -1,0 +1,37 @@
+version: '3'
+services:
+  db:
+    image: postgres:10.1-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+  app:
+    image: jhpyle/docassemble
+    volumes:
+      - ./backup:/usr/share/docassemble/backup
+    ports:
+      # http
+      - 80:80
+      - 443:443
+      # log
+      - 514:514
+      - 8080:8080
+      # redis
+      - 6379:6379
+      # rabbitmq
+      - 4369:4369
+      - 5671:5671
+      - 5672:5672
+      - 25672:25672
+      # mail
+      - 25:25
+    stop_grace_period: 1m
+    environment:
+      - CONTAINERROLE=web:celery:cron:redis:rabbitmq:log:mail
+      - DBBACKUP=false
+      - DBHOST=db
+      - DBNAME=docassemble
+      - DBUSER=docassemble
+      - DBPASSWORD=10x
+      - TIMEZONE=America/New_York
+volumes:
+  postgres_data:
