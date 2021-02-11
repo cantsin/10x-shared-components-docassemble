@@ -1,17 +1,58 @@
 version: '3'
 services:
-  db:
+  # directus wants this.
+  # However... it might be using the redis instance
+  # in the docassemble container. I'd like to try and 
+  # pull redis *out* of the DA container, but... not for now.
+  # cache:
+  #   container_name: cache
+  #   image: redis:6
+
+  directus:
+    container_name: directus
+    image: directus/directus:v9.0.0-rc.24
+    ports:
+      - 8055:8055
+    depends_on:
+      - docassemble
+      - database
+    environment:
+      # This key and secret may be bogus?
+      # Came in the demo config on the directus website.
+      KEY: '255d861b-5ea1-5996-9aa3-922530ec40b1'
+      SECRET: '6116487b-cda1-52c2-b5b5-c8022c45e263'
+      DB_CLIENT: 'pg'
+      DB_HOST: 'database'
+      DB_PORT: '5432'
+      # Reuse the docassemble db. Why? So we can interact
+      # with the docassemble system in bad ways.
+      DB_DATABASE: 'docassemble'
+      DB_USER: 'postgres'
+      DB_PASSWORD: '10x'
+      # User and password only get set on first run.
+      # You will have to flush the volume if you ran this previously.
+      ADMIN_EMAIL: '10x@gsa.gov'
+      ADMIN_PASSWORD: "10x"
+
+  database:
     image: postgres:10.1-alpine
+    container_name: database
     volumes:
       - postgres_data:/var/lib/postgresql/data/
+    ports:
+      - 5432:5432
     environment:
       - POSTGRES_DB=docassemble
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=10x
-  app:
+
+  docassemble:
     image: jhpyle/docassemble
+    container_name: docassemble
     volumes:
       - ./backup:/usr/share/docassemble/backup
+    depends_on:
+      - database
     ports:
       # http
       - 8000:80
@@ -32,10 +73,20 @@ services:
     environment:
       - CONTAINERROLE=web:celery:cron:redis:rabbitmq:log:mail
       - DBBACKUP=false
-      - DBHOST=db
+      - DBHOST=database
       - DBNAME=docassemble
       - DBUSER=postgres
       - DBPASSWORD=10x
       - TIMEZONE=America/New_York
+      # These cannot be set? Therefore, first use looks like:
+      #   Email: admin@admin.com
+      #   Password: password
 volumes:
+  # To flush everything:
+  # Stop. 
+  # docker container prune
+  # docker volume prune
+  # Possibly... docker volume rm 10x-share-components-docassemble_postgres_data
+  # This does prune a lot, so if you're doing other docker work,
+  # something more targeted may be warranted.
   postgres_data:
