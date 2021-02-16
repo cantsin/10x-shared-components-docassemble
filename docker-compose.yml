@@ -38,7 +38,7 @@ services:
     image: postgres:10.1-alpine
     container_name: database
     volumes:
-      - postgres_data:/var/lib/postgresql/data/
+      - ${PWD}/pgdata:/var/lib/postgresql/data/
     ports:
       - 5432:5432
     environment:
@@ -50,7 +50,8 @@ services:
     image: jhpyle/docassemble
     container_name: docassemble
     volumes:
-      - ./backup:/usr/share/docassemble/backup
+      - ${PWD}/backup:/usr/share/docassemble/backup
+      - ${PWD}/pgdata:/var/lib/postgresql/data/
     depends_on:
       - database
     ports:
@@ -81,12 +82,12 @@ services:
       # These cannot be set? Therefore, first use looks like:
       #   Email: admin@admin.com
       #   Password: password
-volumes:
-  # To flush everything:
-  # Stop. 
-  # docker container prune
-  # docker volume prune
-  # Possibly... docker volume rm 10x-share-components-docassemble_postgres_data
-  # This does prune a lot, so if you're doing other docker work,
-  # something more targeted may be warranted.
-  postgres_data:
+# volumes:
+#   # To flush everything:
+#   # Stop. 
+#   # docker container prune
+#   # docker volume prune
+#   # Possibly... docker volume rm 10x-share-components-docassemble_postgres_data
+#   # This does prune a lot, so if you're doing other docker work,
+#   # something more targeted may be warranted.
+#   postgres_data:
